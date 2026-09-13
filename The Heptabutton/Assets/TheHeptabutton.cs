@@ -68,8 +68,8 @@ public class TheHeptabutton : MonoBehaviour {
       }
       HoldTime = (int)Bomb.GetTime();
       if (stage == 2) {
+      stageThreeColor = colorIndex;
          if (Rnd.Range(0,2) == 0) {
-            stageThreeColor = colorIndex;
             do {
                colorIndex = Rnd.Range(0,27);
             } while (colorIndex == stageThreeColor);
