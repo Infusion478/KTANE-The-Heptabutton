@@ -529,6 +529,9 @@ public class TheHeptabutton : MonoBehaviour {
             yield return "sendtochaterror Something went wrong, or the command was invalid.";
             yield break;
          }
+         if (ModuleSolved) {
+            yield return "solve";
+         }
       }
    }
 
