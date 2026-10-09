@@ -402,6 +402,7 @@ public class TheHeptabutton : MonoBehaviour {
                Debug.LogFormat("[The Heptabutton #{0}] After adding the sum of the serial number digits, modulo 18, the new value is {1}.", ModuleId, stageSevenTarget);
                if (!(Bomb.GetModuleNames().Count().ToString().Contains('7'))) {
                   stageSevenTarget = (60 - stageSevenTarget);
+                  stageSevenTarget %= 60;
                   Debug.LogFormat("[The Heptabutton #{0}] However, the number of modules does not contain a 7, so the new value is {1}.", ModuleId, stageSevenTarget);
                }
                Debug.LogFormat("[The Heptabutton #{0}] Therefore, the button must be held when the seconds digits are {1}{2}, and released after 7 seconds.", ModuleId, (stageSevenTarget < 10)?"0":"", stageSevenTarget);
