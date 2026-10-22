@@ -44,6 +44,9 @@ public class TheHeptabutton : MonoBehaviour {
    private int stageSixReference;
    private int stageSevenTarget;
 
+   private bool TwitchAutosolve;
+   private bool XYCalculated;
+
    static int ModuleIdCounter = 1;
    int ModuleId;
    private bool ModuleSolved;
@@ -165,7 +168,7 @@ public class TheHeptabutton : MonoBehaviour {
                   Strike();
                }
             } else {
-               if (HoldTime % 10 == (Bomb.GetBatteryCount()) % 10 && HoldLength >=6 && HoldLength <= 8) {
+               if (HoldTime % 10 == (Bomb.GetBatteryCount()) % 10 && HoldLength >= 6 && HoldLength <= 8) {
                   Debug.LogFormat("[The Heptabutton #{0}] The button was held when the last digit was {1}, and released after {2} seconds. Correct!", ModuleId, HoldTime % 10, HoldLength);
                   AdvanceStage();
                } else if (HoldTime % 10 == (Bomb.GetBatteryCount()) % 10) {
@@ -246,8 +249,7 @@ public class TheHeptabutton : MonoBehaviour {
             } else {
                Debug.LogFormat("[The Heptabutton #{0}] The button was held at {1}{2}{3}{4}, AND it was released after {5} second(s). Strike!", ModuleId, (HoldTime / 60), ":", ((HoldTime % 60) < 10)?"0":"", (HoldTime % 60), HoldLength);
                Strike();
-            }
-         break;
+            } break;
       }
    }
 
@@ -358,6 +360,7 @@ public class TheHeptabutton : MonoBehaviour {
                      Y = 0;
                   }
                }
+               XYCalculated = true;
                Debug.LogFormat("[The Heptabutton #{0}] Stage 5: The sum of the tap code rows in the button's text is {1}, and the sum of the columns is {2}.", ModuleId, rowSum, colSum);
                Debug.LogFormat("[The Heptabutton #{0}] This makes X equal to {1} and Y equal to {2}.", ModuleId, X, Y);
                if (ButtonText.text.Length % 2 == 1) {
@@ -441,24 +444,46 @@ public class TheHeptabutton : MonoBehaviour {
 
    IEnumerator SolveAnimation() {
       Audio.PlaySoundAtTransform(Sounds[0], Button.transform);
-      ButtonColor.material = ButtonColors[8];
-      BackgroundColor.material = ButtonColors[2];
-      ButtonText.color = Color.black;
-      ButtonText.text = "A";
-      yield return new WaitForSeconds(.666666f);
-      ButtonText.text = "AM";
-      yield return new WaitForSeconds(.666666f);
-      ButtonText.text = "AMA";
-      yield return new WaitForSeconds(.666666f);
-      ButtonText.text = "AMAZ";
-      yield return new WaitForSeconds(.666666f);
-      ButtonText.text = "AMAZI";
-      yield return new WaitForSeconds(.666666f);
-      ButtonText.text = "AMAZIN";
-      yield return new WaitForSeconds(.666666f);
-      ButtonText.text = "AMAZING";
-      ButtonColor.material = ButtonColors[25];
-      BackgroundColor.material = ButtonColors[6];
+      if (TwitchAutosolve) {
+         ButtonColor.material = ButtonColors[2];
+         BackgroundColor.material = ButtonColors[25];
+         ButtonText.color = Color.white;
+         ButtonText.text = "C";
+         yield return new WaitForSeconds(.666666f);
+         ButtonText.text = "CH";
+         yield return new WaitForSeconds(.666666f);
+         ButtonText.text = "CHE";
+         yield return new WaitForSeconds(.666666f);
+         ButtonText.text = "CHEA";
+         yield return new WaitForSeconds(.666666f);
+         ButtonText.text = "CHEAT";
+         yield return new WaitForSeconds(.666666f);
+         ButtonText.text = "CHEATE";
+         yield return new WaitForSeconds(.666666f);
+         ButtonText.text = "CHEATER";
+         ButtonColor.material = ButtonColors[25];
+         BackgroundColor.material = ButtonColors[2];
+         ButtonText.color = Color.black;
+      } else {
+         ButtonColor.material = ButtonColors[8];
+         BackgroundColor.material = ButtonColors[2];
+         ButtonText.color = Color.black;
+         ButtonText.text = "A";
+         yield return new WaitForSeconds(.666666f);
+         ButtonText.text = "AM";
+         yield return new WaitForSeconds(.666666f);
+         ButtonText.text = "AMA";
+         yield return new WaitForSeconds(.666666f);
+         ButtonText.text = "AMAZ";
+         yield return new WaitForSeconds(.666666f);
+         ButtonText.text = "AMAZI";
+         yield return new WaitForSeconds(.666666f);
+         ButtonText.text = "AMAZIN";
+         yield return new WaitForSeconds(.666666f);
+         ButtonText.text = "AMAZING";
+         ButtonColor.material = ButtonColors[25];
+         BackgroundColor.material = ButtonColors[6];
+      }
       Debug.LogFormat("[The Heptabutton #{0}] Module solved! Amazing!", ModuleId);
       GetComponent<KMBombModule>().HandlePass();
    }
@@ -478,7 +503,7 @@ public class TheHeptabutton : MonoBehaviour {
    }
 
 #pragma warning disable 414
-   private readonly string TwitchHelpMessage = @"!{0} t (number) [Taps the button at the specified time] | !{0} h (number) [Holds the button at the specified time] | !{0} r (number) [Releases the button at the specified time] | Commands can be chained with semicolons (;). If a time is one digit, it will be considered as the last seconds digit. If it is two digits, it will be considered as the two seconds digits. | !{0} colorblind [Enables colorblind mode]";
+   private readonly string TwitchHelpMessage = @"!{0} t (number) [Taps the button at the specified time] | !{0} h (number) [Holds the button at the specified time] | !{0} r (number) [Releases the button at the specified time] | Commands can be chained with semicolons (;). Example: !{0} h 3;r 1 holds on 3 and releases on 1. If a time is one digit, it will be considered as the last seconds digit. If it is two digits, it will be considered as the two seconds digits. | !{0} colorblind [Enables colorblind mode]";
 #pragma warning restore 414
 
    IEnumerator ProcessTwitchCommand (string Command) {
@@ -498,7 +523,7 @@ public class TheHeptabutton : MonoBehaviour {
       }
       string[] Commands = Command.Split(';');
       for (int i = 0; i < Commands.Length; i++) {
-         if (!"thr".Contains(Commands[i][0]) || Commands[i][1] != ' ' || Commands[i].Length > 4 || Commands[i].Length < 3 || !"0123456789".Contains(Commands[i][2]) || (Commands[i].Length == 4 && !"0123456789".Contains(Commands[i][3]))) {
+         if (!Regex.IsMatch(Commands[i], @"^\s*[thr]\s+\d\d?\s*$")) {
             yield return "sendtochaterror Invalid command.";
             yield break;
          }
@@ -537,33 +562,103 @@ public class TheHeptabutton : MonoBehaviour {
    }
 
    IEnumerator TwitchHandleForcedSolve () {
-      for (int i = (stage + 1); i < 8; i++) {
-         StageLights[i - 1].GetComponent<MeshRenderer>().material = ButtonColors[8];
-         StageLightEffects[i - 1].gameObject.SetActive(true);
+      TwitchAutosolve = true;
+      for (int i = stage; i < 7; i++) {
+         int ht;
+         int rt;
+         int query;
+         switch (i) {
+            case 0:
+               ht = (ButtonText.text.Length + Bomb.GetSerialNumberNumbers().First()) % 10;
+               rt = ht;
+               yield return StartCoroutine(TwitchInteraction(ht, rt));
+               break;
+            case 1:
+               int r = (((stageColors[0]) / 100) + ((stageColors[1]) / 100)) % 3;
+               int g = (((stageColors[0]) / 10) % 10 + ((stageColors[1]) / 10) % 10) % 3;
+               int b = (stageColors[0] % 10 + stageColors[1] % 10) % 3;
+               ht = r * 3 + g;
+               rt = b;
+               while ((((int)Bomb.GetTime() % 60) % 10) != ht) yield return null;
+               Button.OnInteract();
+               while ((((int)Bomb.GetTime() % 60) % 10) % 3 != rt) yield return null;
+               Button.OnInteractEnded();
+               break;
+            case 2:
+               string code = morse[Array.IndexOf("ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray(), Bomb.GetSerialNumberLetters().First())];
+               int length = 0;
+               for (int j = 0; j < code.Length; j++) {
+                  length += (code[j].ToString() == ".")?1:3;
+               }
+               query = (int)Bomb.GetTime();
+               yield return new WaitForSeconds(1.2f);
+               if ((int)Bomb.GetTime() < query) {
+                  ht = (length + Bomb.GetSerialNumberNumbers().Last()) % 10;
+               } else {
+                  ht = ((Bomb.GetSerialNumberNumbers().Last() - length) % 10 + 10) % 10;
+               }
+               rt = Bomb.GetSerialNumberNumbers().Last();
+               yield return StartCoroutine(TwitchInteraction(ht, rt));
+               break;
+            case 3:
+               if (stageFourCondition) {
+                  ht = 0;
+                  rt = 0;
+                  StartCoroutine(TwitchInteraction(ht, rt));
+               } else {
+                  ht = (Bomb.GetBatteryCount()) % 10;
+                  query = (int)Bomb.GetTime();
+                  yield return new WaitForSeconds(1.2f);
+                  if ((int)Bomb.GetTime() < query) {
+                     rt = ((ht - 6) % 10 + 10) % 10;
+                  } else {
+                     rt = (ht + 6) % 10;
+                  }
+               }
+               yield return StartCoroutine(TwitchInteraction(ht, rt));
+               break;
+            case 4:
+               while (!XYCalculated) yield return null;
+               if (ButtonText.text.Length % 2 == 1) {
+                  ht = X;
+                  rt = Y;
+               } else {
+                  ht = Y;
+                  rt = X;
+               }
+               yield return StartCoroutine(TwitchInteraction(ht, rt));
+               break;
+            case 5:
+               if (stageSixReference < 8) {
+                  ht = stageSixReference;
+               } else {
+                  ht = stageSixReference % 10;
+               }
+               rt = ht;
+               yield return StartCoroutine(TwitchInteraction(ht, rt));
+               break;
+            case 6:
+               ht = stageSevenTarget; 
+               query = (int)Bomb.GetTime();
+               yield return new WaitForSeconds(1.2f);
+               if ((int)Bomb.GetTime() < query) {
+                  rt = ((ht - 7) % 60 + 60) % 60;
+               } else {
+                  rt = (ht + 7) % 60;
+               }
+               while (((int)Bomb.GetTime() % 60) != ht) yield return null;
+               Button.OnInteract();
+               while (((int)Bomb.GetTime() % 60) != rt) yield return null;
+               Button.OnInteractEnded();
+               break;
+         }
       }
-      ModuleSolved = true;
-      ColorblindIndicator.gameObject.SetActive(false);
-      Audio.PlaySoundAtTransform(Sounds[0], Button.transform);
-      ButtonColor.material = ButtonColors[2];
-      BackgroundColor.material = ButtonColors[25];
-      ButtonText.color = Color.white;
-      ButtonText.text = "C";
-      yield return new WaitForSeconds(.666666f);
-      ButtonText.text = "CH";
-      yield return new WaitForSeconds(.666666f);
-      ButtonText.text = "CHE";
-      yield return new WaitForSeconds(.666666f);
-      ButtonText.text = "CHEA";
-      yield return new WaitForSeconds(.666666f);
-      ButtonText.text = "CHEAT";
-      yield return new WaitForSeconds(.666666f);
-      ButtonText.text = "CHEATE";
-      yield return new WaitForSeconds(.666666f);
-      ButtonText.text = "CHEATER";
-      ButtonColor.material = ButtonColors[25];
-      BackgroundColor.material = ButtonColors[2];
-      ButtonText.color = Color.black;
-      Debug.LogFormat("[The Heptabutton #{0}] Module autosolved by Twitch Plays.", ModuleId);
-      GetComponent<KMBombModule>().HandlePass();
+   }
+
+   IEnumerator TwitchInteraction(int ht, int rt) {
+      while ((((int)Bomb.GetTime() % 60) % 10) != ht) yield return null;
+      Button.OnInteract();
+      while ((((int)Bomb.GetTime() % 60) % 10) != rt) yield return null;
+      Button.OnInteractEnded();
    }
 }
